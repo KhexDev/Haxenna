@@ -9,5 +9,7 @@
 			"source.sortImports": true
 		}
 	},
-	"haxe.enableExtendedIndentation": true
+	"haxe.enableExtendedIndentation": true,
+	"haxe.diagnosticsPathFilter": "${workspaceRoot}/src|${haxelibPath}",
+	"haxe.buildCompletionCache": true
 }

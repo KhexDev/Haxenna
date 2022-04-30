@@ -1,0 +1,12 @@
+POUR AJOUTER UN NIVEAU:
+
+1:ajouter vos charts/json dans assets/data/charts/
+2:ajouter vos musique/.ogg dans assets/music
+
+
+ATTENTION: assurer vous d'avoir mis le même nom au deux fichier (ex: cookie.json et cookie.ogg)
+
+
+QUE FAIRE SI UN NIVEAU EST BUGER
+
+reporter le bug au devloppers lol.

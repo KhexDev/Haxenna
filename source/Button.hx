@@ -1,3 +1,4 @@
+import _cool_Util.Paths;
 import flixel.FlxG;
 import flixel.FlxSprite;
 

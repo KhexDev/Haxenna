@@ -1,20 +1,7 @@
 import flixel.graphics.frames.FlxAtlasFrames;
-import openfl.Assets;
 
 class Paths
 {
-	static public function getXML(xml:String)
-	{
-		return 'assets/images/$xml.xml';
-	}
-
-	static public function getImage(image:String)
-	{
-		return 'assets/images/$image.png';
-	}
-
-	static public function getSparrowAtlas(key:String)
-	{
-		return FlxAtlasFrames.fromSparrow('assets/images/$key.png', getXML(key));
-	}
+	static public function getFromSparrowAtlas(name:String)
+		return FlxAtlasFrames.fromSparrow('assets/images/characters/$name.png', 'assets/images/characters/$name.xml');
 }

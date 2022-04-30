@@ -1,7 +1,9 @@
+import Options.Option;
+import _cool_Util.Paths;
 import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.math.FlxMath;
 import flixel.util.FlxColor;
-import haxe.io.Float32Array;
 
 class Note extends FlxSprite
 {
@@ -9,76 +11,143 @@ class Note extends FlxSprite
 
 	public var wasHit:Bool;
 	public var canBeHit:Bool;
-	public var goodHit:Bool;
-	public var rating:String;
-	public var songPosition:Float;
+	public var strumTime:Float;
 
-	var isSus:Bool;
-	var danger:Bool;
+	public var isSus:Bool;
+	public var susLength:Float;
+	public var isTail:Bool;
 
-	static public var hitZone:Array<Float> = [600, 100];
+	public var ogLengthSus:Float;
+
+	public var isLift:Bool;
+
+	public var danger:Bool;
+
+	public var tooLate:Bool;
+
+	static public var hitZone:Array<Float> = [500, 130];
 
 	public var noteData:Int;
 	public var noteType:String;
-	public var lastPosition:Float;
-	public var prevNote:Float;
+
+	public var children:Array<Note>;
+	public var isChildren:Bool;
+
+	public var parent:Note;
+
+	public var prevNote:Note;
+
+	public var mustPress:Bool;
+
+	public var isDuplicate:Bool = false;
 
 	var data = ["LEFT", "LEFT", "UP", "RIGHT"];
 	var dataColor = ['purple', 'blue', 'green', 'red'];
 
-	public function new(x:Float, y:Float, noteData:Int, noteType:String, inCharter:Bool)
+	public function new(x:Float, strumTime:Float = 0.0, noteData:Int = 0, noteType:String = 'normal', inCharter:Bool = false, isSus:Bool = false,
+			isTail:Bool = false, isLift:Bool = false)
 	{
 		super(x, y);
 		this.noteData = noteData;
 		this.noteType = noteType;
 		this.inCharter = inCharter;
-		songPosition = y;
+		this.isSus = isSus;
+		this.isTail = isTail;
+		this.isLift = isLift;
+		this.strumTime = strumTime;
 
-		switch (noteType)
-		{
-			case 'normal':
-				frames = Paths.getSparrowAtlas('Arrows');
-			case 'strangerDanger':
-		}
+		ogLengthSus = susLength;
+
+		var shitStrum:Float;
+		var shitNoteData:Int;
+
+		children = [];
+
+		// noteType = "danger";
+
+		frames = Paths.getSparrowAtlas('$noteType/Arrows');
+
 		if (inCharter)
 			setGraphicSize(Std.int(width * 0.5));
 		else
 			setGraphicSize(Std.int(width * 0.7));
 
-		for (i in 0...4)
+		if (this.noteType == "entity")
 		{
-			animation.addByPrefix(dataColor[i], dataColor[i] + " alone", 1, false);
+			for (i in 0...4)
+			{
+				animation.addByPrefix(dataColor[i], dataColor[i], 1, false);
+				animation.addByPrefix(dataColor[i] + ' hold', dataColor[i] + ' hold', 1, false);
+				animation.addByPrefix(dataColor[i] + ' tail', dataColor[i] + ' tail', 1, false);
+			}
+
+			// this.x -= 270;
+		}
+		else if (this.noteType == "danger")
+		{
+			for (i in 0...4)
+			{
+				animation.addByPrefix(dataColor[i], dataColor[i] + "fire", 24, false);
+			}
+		}
+		else
+		{
+			for (i in 0...4)
+			{
+				animation.addByPrefix(dataColor[i], dataColor[i] + " alone", 1, false);
+				animation.addByPrefix(dataColor[i] + ' hold', dataColor[i] + ' hold', 1, false);
+				animation.addByPrefix(dataColor[i] + ' tail', dataColor[i] + ' tail', 1, false);
+			}
+
+			this.x -= 80;
 		}
 
-		switch (noteData)
+		var _dataColor:Array<String> = ["purple", "blue", "green", "red"];
+
+		var stepHeight = (((0.45 * Conductor.stepCrochet)) * FlxMath.roundDecimal(Option.scrollSpeed == 1 ? PlayState.speed : Option.scrollSpeed, 2));
+
+		if (prevNote != null)
 		{
-			case 0:
-				animation.play('purple');
-			case 1:
-				animation.play('blue');
-			case 2:
-				animation.play('green');
-			case 3:
-				animation.play('red');
+			if (prevNote.isSus)
+			{
+				prevNote.scale.y = stepHeight / prevNote.height;
+				prevNote.updateHitbox();
+			}
 		}
-		// trace(noteData);
+
+		// im proud of this function
+		function getNoteType(type:String = "default"):String
+		{
+			if (type == "default")
+				return _dataColor[this.noteData];
+			return _dataColor[this.noteData] + " " + type;
+		}
+
+		if (this.isTail)
+		{
+			animation.play(getNoteType("tail"));
+		}
+
+		if (this.isSus)
+		{
+			animation.play(getNoteType("hold"));
+		}
+		else
+		{
+			animation.play(getNoteType());
+		}
+
+		if (this.noteType == "danger")
+			this.x -= 320;
 	}
 
 	override public function update(elapsed:Float)
 	{
 		if (!inCharter)
-		{
-			if (y >= PlayState.receptors.members[noteData].y + hitZone[0] && y <= PlayState.receptors.members[noteData].y - hitZone[1])
-				canBeHit = true;
-			else
-				canBeHit = false;
-		}
+			canBeHit = (strumTime <= Conductor.songPosition + (Conductor.safeFrames * 10)
+				&& strumTime >= Conductor.songPosition - (Conductor.safeFrames * 10));
 
-		if (goodHit)
-		{
-			lastPosition = y;
-			alpha = 0.5;
-		}
+		// active = (Conductor.songPosition - strumTime < 1000 && !mustPress && !isSus);
 
 		super.update(elapsed);
 	}
