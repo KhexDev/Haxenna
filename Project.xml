@@ -18,15 +18,16 @@
 	<!-- ____________________________ Window Settings ___________________________ -->
 
 	<!--These window settings apply to all targets-->
-	<window width="1280" height="720" fps="120" background="#000000" hardware="true" vsync="false" />
+	<window width="1280" height="720" fps="120" background="#000000" hardware="true" vsync="true" />
 
 	<!--HTML5-specific-->
-	<window if="html5" resizable="false" />
+	<window if="html5" resizable="true" />
 
 	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" />
 
 	<!--Mobile-specific-->
 	<window if="mobile" orientation="landscape" fullscreen="true" width="0" height="0" />
+
 
 	<!-- _____________________________ Path Settings ____________________________ -->
 
@@ -84,6 +85,9 @@
 
 	<!-- _________________________________ Custom _______________________________ -->
 
-
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
+
+	<haxeflag name="--dce full"/>
+	<haxeflag name="--times"/>
+
 </project>

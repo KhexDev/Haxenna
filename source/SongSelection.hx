@@ -2,6 +2,8 @@ package;
 
 import Options.Option;
 import _cool_Util.Paths;
+import _cool_Util.SearchBar;
+import _cool_Util.SongBox;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
@@ -12,9 +14,15 @@ import flixel.math.FlxMath;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
+import openfl.Assets;
 
 using StringTools;
 
+#if html5
+import js.html.FileReader;
+import js.html.FileSystem;
+import js.html.FileSystemDirectoryEntry;
+#end
 #if sys
 import sys.FileSystem;
 import sys.io.File;
@@ -28,7 +36,8 @@ class SongSelection extends MusicBeatState
 
 	var songFiles:Array<String> = [];
 
-	var songList:FlxTypedGroup<FlxText>;
+	var tempSongList:Array<String> = [];
+	var songList:FlxTypedGroup<SongBox>;
 
 	var bg:FlxSprite;
 
@@ -38,12 +47,20 @@ class SongSelection extends MusicBeatState
 
 	var defaultTextX:Float = 0;
 
+	var searchBar:SearchBar;
+
+	var canPress:Bool = false;
+
+	#if html5
+	static private var daFileSystem:FileSystemDirectoryEntry;
+	#end
+
 	override public function create()
 	{
 		camFollow = new FlxObject(FlxG.width / 2, FlxG.height / 2, 1, 1);
 		add(camFollow);
 
-		FlxG.camera.follow(camFollow, LOCKON, 0.05);
+		FlxG.camera.follow(camFollow, LOCKON, 0.05 / (openfl.Lib.current.stage.frameRate / 60));
 
 		bg = new FlxSprite().loadGraphic("assets/images/songSelection_bg.png");
 		bg.setGraphicSize(FlxG.width, FlxG.height);
@@ -51,17 +68,12 @@ class SongSelection extends MusicBeatState
 		bg.scrollFactor.set();
 		add(bg);
 
-		songName = new FlxText(FlxG.width / 2, FlxG.height / 4, 0, "null", 50);
-		songName.x -= songName.width / 2;
-		songName.x -= songName.width;
-		// add(songName);
-
 		#if sys
 		for (i in FileSystem.readDirectory("assets/music/"))
 		{
 			var daSong:String = i;
 
-			if (/*daSong == "ballistic.ogg" || */ daSong == "freakyMenu.ogg" /*|| daSong == "danger.ogg"*/ /*|| daSong == "thunderstorm.ogg"*/)
+			if (daSong == "freakyMenu.ogg")
 				continue;
 
 			#if debug
@@ -75,18 +87,22 @@ class SongSelection extends MusicBeatState
 		}
 		#end
 
-		songList = new FlxTypedGroup<FlxText>();
+		songList = new FlxTypedGroup<SongBox>();
 		add(songList);
 
 		for (i in 0...songFiles.length)
 		{
-			var daSong:FlxText = new FlxText(FlxG.width / 2, 0, 0, songFiles[i], 50);
-			// daSong.alpha = 0;
-			// daSong.font = Paths.getFonts("funkin");
-			daSong.y = (daSong.height + 100) * i;
-			daSong.x -= (daSong.width / 2) + 300;
-			songList.add(daSong);
-			defaultTextX = daSong.x;
+			var songBox:SongBox = new SongBox(FlxG.width / 2, 0, songFiles[i], 50);
+			songBox.y = (songBox.height + 100) * i;
+			songBox.x -= (songBox.width / 2) + 300;
+			songList.add(songBox);
+
+			/*var daSong:FlxText = new FlxText(FlxG.width / 2, 0, 0, songFiles[i], 50);
+				// daSong.alpha = 0;
+				// daSong.font = Paths.getFonts("funkin");
+				daSong.y = (daSong.height + 100) * i;
+				daSong.x -= (daSong.width / 2) + 300;
+				songList.add(daSong); */
 		}
 
 		for (i in 0...songList.members.length)
@@ -98,22 +114,95 @@ class SongSelection extends MusicBeatState
 		trace(songFiles);
 		#end
 
-		super.create();
-	}
+		searchBar = new SearchBar(FlxG.width / 2, 25);
+		searchBar.x -= (searchBar.width / 2);
+		add(searchBar);
 
-	function updateSongName()
-	{
-		remove(songName);
-		songName = new FlxText(FlxG.width / 2, FlxG.height / 4, 0, songFiles[selection], 50);
-		songName.x -= (songName.width / 2);
-		add(songName);
+		for (i in songList.members)
+		{
+			searchBar.data.push(i.text);
+		}
+
+		// trace(searchBar.data);
+
+		super.create();
 	}
 
 	function updateCamPos()
 	{
-		var daSong = songList.members[selection];
-		if (selection > -1 && selection < songList.members.length)
-			camFollow.setPosition(daSong.x + (daSong.width / 2) + 300, daSong.y + (daSong.height / 2));
+		if (songList.members.length > 0)
+		{
+			var daSong = songList.members[selection];
+
+			if (daSong != null)
+			{
+				if (selection > -1 && selection < songList.members.length)
+				{
+					camFollow.setPosition(daSong.x + (daSong.width / 2) + 300, daSong.y + (daSong.height / 2));
+				}
+			}
+		}
+		else
+		{
+			trace("NO");
+		}
+	}
+
+	function updateSongList()
+	{
+		trace("updating song list...");
+		#if PRECISE_DEBUG
+		trace("PRECISING SHIT");
+		#end
+
+		selection = 0;
+
+		var daSongList = searchBar.getResult();
+
+		songFiles = daSongList;
+
+		trace(daSongList);
+
+		remove(songList);
+
+		trace(songList.members.length);
+
+		/*songList.forEachAlive(function(daSong:FlxText)
+			{
+				trace("removing " + daSong.text);
+				daSong.kill();
+				songList.remove(daSong, true);
+				daSong.destroy();
+		});*/
+
+		for (song in songList.members)
+		{
+			if (daSongList.contains(song.text))
+			{
+				continue;
+			}
+			else
+			{
+				song.kill();
+				songList.remove(song, true);
+				song.destroy();
+			}
+		}
+
+		trace(songList.members.length);
+
+		/*for (i in 0...daSongList.length)
+			{
+				trace("adding " + daSongList[i]);
+				var daSong:FlxText = new FlxText(FlxG.width / 2, 0, 0, daSongList[i], 50);
+				daSong.y = (daSong.height + 100) * i;
+				daSong.x -= (daSong.width / 2) + 300;
+				songList.add(daSong);
+		}*/
+
+		add(songList);
+
+		trace(songList.members.length);
 	}
 
 	override public function update(elapsed:Float)
@@ -144,21 +233,27 @@ class SongSelection extends MusicBeatState
 
 		// songList.members[selection].setPosition(songList.members[selection].x + 200, songList.members[selection].y);
 
-		if (FlxG.keys.justPressed.ENTER || FlxG.mouse.justPressed)
+		if (FlxG.keys.justPressed.ENTER)
 		{
-			for (song in songList)
+			if (!searchBar.typing)
 			{
-				if (song == songList.members[selection])
+				for (song in songList)
 				{
-					FlxFlicker.flicker(song, 1, 0.06, false, false, function(flick:FlxFlicker)
+					if (song.text == songList.members[selection].text)
 					{
-						FlxG.switchState(new PlayState());
-					});
-				}
-				else
-				{
-					FlxTween.tween(song, {x: -100}, 0.8, {ease: FlxEase.quadInOut});
-					FlxTween.tween(song, {alpha: 0}, 0.8, {ease: FlxEase.quadInOut});
+						for (sprite in song.members)
+						{
+							FlxFlicker.flicker(sprite, 1, 0.06, false, false, function(flick:FlxFlicker)
+							{
+								FlxG.switchState(new PlayState());
+							});
+						}
+					}
+					else
+					{
+						// FlxTween.tween(song, {x: -100}, 0.8, {ease: FlxEase.quadInOut});
+						// FlxTween.tween(song, {alpha: 0}, 0.8, {ease: FlxEase.quadInOut});
+					}
 				}
 			}
 		}
@@ -186,10 +281,15 @@ class SongSelection extends MusicBeatState
 		if (FlxG.keys.justPressed.UP)
 			selection--;
 
-		if (FlxG.keys.justPressed.BACKSPACE)
+		if (FlxG.keys.justPressed.ESCAPE)
 			FlxG.switchState(new Menu());
 
 		updateCamPos();
+
+		if (FlxG.keys.justPressed.A && !searchBar.typing)
+		{
+			updateSongList();
+		}
 
 		super.update(elapsed);
 	}

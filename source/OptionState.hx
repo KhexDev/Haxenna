@@ -19,15 +19,8 @@ class OptionState extends MusicBeatState
 	var selection:Int = 0;
 
 	var optionList = [
-		"offset",
-		"scroll speed",
-		"show fps",
-		"fps cap",
-		"syncing",
-		"keybinds",
-		"opponent mode",
-		"middle scroll",
-		"ghost tapping"
+		"offset", "scroll speed", "show fps", "fps cap", "syncing", "keybinds", "opponent mode", "middle scroll", "ghost tapping", "miss sounds",
+		"multiplier", "input", "botplay", "optimisation", "two player ?"
 	];
 
 	var infoText:FlxText;
@@ -43,7 +36,7 @@ class OptionState extends MusicBeatState
 		camFollow = new FlxObject(FlxG.width / 2, FlxG.height / 2, 1, 1);
 		add(camFollow);
 
-		FlxG.camera.follow(camFollow, LOCKON, 0.05);
+		FlxG.camera.follow(camFollow, LOCKON, 0.05 / (openfl.Lib.current.stage.frameRate / 60));
 
 		bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.GRAY);
 		bg.scrollFactor.set();
@@ -66,6 +59,11 @@ class OptionState extends MusicBeatState
 		options.add(new FlxText('middle scroll', 50));
 		options.add(new FlxText('ghost tapping', 50));
 		options.add(new FlxText('miss sounds', 50));
+		options.add(new FlxText('multiplier', 50));
+		options.add(new FlxText('input', 50));
+		options.add(new FlxText('botplay', 50));
+		options.add(new FlxText('optimisation', 50));
+		options.add(new FlxText('two player ?', 50));
 
 		for (i in options)
 		{
@@ -90,15 +88,28 @@ class OptionState extends MusicBeatState
 			selector.y = options.members[selection].y + 10;
 		}
 
-		if (selection > options.members.length - 1)
-			selection = 0;
-		else if (selection < 0)
-			selection = options.members.length - 1;
-
 		if (FlxG.keys.justPressed.DOWN)
-			selection++;
+		{
+			if (selection >= options.members.length - 1)
+			{
+				selection = 0;
+			}
+			else
+			{
+				selection++;
+			}
+		}
 		else if (FlxG.keys.justPressed.UP)
-			selection--;
+		{
+			if (selection <= 0)
+			{
+				selection = options.members.length - 1;
+			}
+			else
+			{
+				selection--;
+			}
+		}
 	}
 
 	function save() {}
@@ -114,7 +125,7 @@ class OptionState extends MusicBeatState
 		switch (daString)
 		{
 			case "offset":
-				daText = "offsets: " + Std.string(Conductor.offsets);
+				daText = "offsets: " + Std.string(Option.offset);
 			case "fps cap":
 				daText = Std.string(Option.fps + "FPS");
 			case "scroll speed":
@@ -135,6 +146,26 @@ class OptionState extends MusicBeatState
 				daText = Std.string(Option.ghostTapping);
 			case "miss sounds":
 				daText = Std.string(Option.missSound);
+			case "multiplier":
+				daText = Std.string(Option.multiplier);
+			case "input":
+				{
+					switch (Option.input)
+					{
+						case 0:
+							daText = "funkin input: only register one note at a time | type: GAME LOOP";
+						case 1:
+							daText = "kade input: register all note possible and not as responsive as psych input | type: GAME LOOP";
+						case 2:
+							daText = "psych input: fast but will sometimes fail to register input| type: CALLBACK";
+					}
+				}
+			case "botplay":
+				daText = "in case you are bad at the game lol : " + (Option.botPlay ? "enabled" : "disabled");
+			case "optimisation":
+				daText = "for computer inferior than a chrombook : " + Std.string(Option.optimisation);
+			case "two player ?":
+				daText = "if you have friend you can play together (not like me) : " + Std.string(Option.twoPlayer);
 		}
 
 		remove(infoText);
@@ -148,8 +179,10 @@ class OptionState extends MusicBeatState
 	{
 		var daOption = options.members[selection];
 
-		if (selection > -1 && selection < options.members.length)
+		if (selection >= 0 && selection <= options.members.length)
+		{
 			camFollow.setPosition(daOption.x + daOption.width / 2, daOption.y + daOption.height / 2);
+		}
 	}
 
 	override public function update(elapsed:Float)
@@ -171,17 +204,17 @@ class OptionState extends MusicBeatState
 		{
 			case "offset":
 				if (FlxG.keys.pressed.RIGHT)
-					Conductor.offsets += 0.1;
+					Option.offset += 0.1;
 				if (FlxG.keys.pressed.LEFT)
-					Conductor.offsets -= 0.1;
+					Option.offset -= 0.1;
 				if (FlxG.keys.justPressed.SPACE)
-					Conductor.offsets = 0;
+					Option.offset = 0;
 				updateSelectText(optionList[selection]);
 
 			case "fps cap":
 				if (FlxG.keys.justPressed.RIGHT)
 					Option.fps += 10;
-				else if (FlxG.keys.justPressed.LEFT && Option.fps - 10 != 50)
+				else if (FlxG.keys.justPressed.LEFT && Option.fps - 10 != 20)
 					Option.fps -= 10;
 				updateSelectText(optionList[selection]);
 
@@ -233,6 +266,41 @@ class OptionState extends MusicBeatState
 				if (FlxG.keys.justPressed.ENTER || FlxG.mouse.justPressed)
 					Option.missSound = !Option.missSound;
 				updateSelectText(optionList[selection]);
+			case "multiplier":
+				if (FlxG.keys.justPressed.RIGHT)
+					Option.multiplier += 0.25;
+				if (FlxG.keys.justPressed.LEFT && Option.renderDistance - 0.25 != 0.5)
+					Option.multiplier -= 0.25;
+				updateSelectText(optionList[selection]);
+			case "input":
+				if (FlxG.keys.justPressed.RIGHT && Option.input + 1 <= 2)
+				{
+					Option.input++;
+				}
+				if (FlxG.keys.justPressed.LEFT && Option.input - 1 >= 0)
+				{
+					Option.input--;
+				}
+				updateSelectText(optionList[selection]);
+
+			case "botplay":
+				if (FlxG.keys.justPressed.ENTER)
+				{
+					Option.botPlay = !Option.botPlay;
+				}
+				updateSelectText(optionList[selection]);
+			case "optimisation":
+				if (FlxG.keys.justPressed.ENTER)
+				{
+					Option.optimisation = !Option.optimisation;
+				}
+				updateSelectText(optionList[selection]);
+			case "two player ?":
+				if (FlxG.keys.justPressed.ENTER)
+				{
+					Option.twoPlayer = !Option.twoPlayer;
+				}
+				updateSelectText(optionList[selection]);
 		}
 
 		if (FlxG.keys.justPressed.BACKSPACE)
@@ -256,13 +324,27 @@ class OptionState extends MusicBeatState
 		// add
 		if (FlxG.mouse.wheel < 0)
 		{
-			selection++;
+			if (selection + 1 <= options.members.length - 1)
+			{
+				selection++;
+			}
+			else
+			{
+				selection = 0;
+			}
 		}
 
 		// sub
 		if (FlxG.mouse.wheel > 0)
 		{
-			selection--;
+			if (selection - 1 >= 0)
+			{
+				selection--;
+			}
+			else
+			{
+				selection = options.members.length - 1;
+			}
 		}
 
 		super.update(elapsed);

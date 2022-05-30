@@ -40,14 +40,30 @@ class MusicBeatState extends FlxUIState
 		var daElapsedShit:Float = 0;
 		var shitInt:Int = 0;
 
-		if (daBeat > nextBeat && daBeat < nextBeat + elapsed)
+		var daStep:Float = Conductor.songPosition / Conductor.steps;
+		var nextStep:Float = Math.round(daStep);
+
+		#if PRECISE_DEBUG
+		FlxG.watch.addQuick("daStep", daStep);
+		FlxG.watch.addQuick("nextStep", nextStep);
+		FlxG.watch.addQuick("daBeat", daBeat);
+		FlxG.watch.addQuick("nextBeat", nextBeat);
+		#end
+
+		if (daBeat > nextBeat && daBeat < nextBeat + (elapsed * 10))
 		{
 			curBeat = Math.round(daBeat);
-			// beatHit(curBeat);
+			#if PRECISE_DEBUG
+			trace("next beat");
+			#end
+			beatHit(curBeat);
 		}
 
 		super.update(elapsed);
 	}
+
+	// manually update beat
+	public function updateBeat() {}
 
 	public function stepHit() {}
 

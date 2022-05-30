@@ -63,43 +63,49 @@ class Note extends FlxSprite
 
 		children = [];
 
-		// noteType = "danger";
+		if (noteData > 3)
+			noteData = noteData % 4;
 
-		frames = Paths.getSparrowAtlas('$noteType/Arrows');
+		if (noteType == "danger")
+		{
+			danger = true;
+		}
 
 		if (inCharter)
+		{
 			setGraphicSize(Std.int(width * 0.5));
+		}
 		else
+		{
 			setGraphicSize(Std.int(width * 0.7));
-
-		if (this.noteType == "entity")
-		{
-			for (i in 0...4)
-			{
-				animation.addByPrefix(dataColor[i], dataColor[i], 1, false);
-				animation.addByPrefix(dataColor[i] + ' hold', dataColor[i] + ' hold', 1, false);
-				animation.addByPrefix(dataColor[i] + ' tail', dataColor[i] + ' tail', 1, false);
-			}
-
-			// this.x -= 270;
 		}
-		else if (this.noteType == "danger")
+
+		if (this.noteType == "danger")
 		{
+			frames = Paths.getSparrowAtlas('NoteType/danger/Arrows');
+
 			for (i in 0...4)
 			{
-				animation.addByPrefix(dataColor[i], dataColor[i] + "fire", 24, false);
+				animation.addByPrefix(dataColor[i], dataColor[i] + " fire", 24, true);
 			}
+
+			this.x -= 150;
 		}
 		else
 		{
+			frames = Paths.getSparrowAtlas('NoteType/normal/Arrows');
+
 			for (i in 0...4)
 			{
-				animation.addByPrefix(dataColor[i], dataColor[i] + " alone", 1, false);
+				animation.addByPrefix(dataColor[i], dataColor[i] + ' alone', 1, false);
 				animation.addByPrefix(dataColor[i] + ' hold', dataColor[i] + ' hold', 1, false);
 				animation.addByPrefix(dataColor[i] + ' tail', dataColor[i] + ' tail', 1, false);
 			}
 
-			this.x -= 80;
+			if (!this.inCharter)
+			{
+				this.x -= 80;
+			}
 		}
 
 		var _dataColor:Array<String> = ["purple", "blue", "green", "red"];
@@ -110,7 +116,7 @@ class Note extends FlxSprite
 		{
 			if (prevNote.isSus)
 			{
-				prevNote.scale.y = stepHeight / prevNote.height;
+				prevNote.scale.y *= stepHeight / prevNote.height * 100;
 				prevNote.updateHitbox();
 			}
 		}
@@ -136,18 +142,15 @@ class Note extends FlxSprite
 		{
 			animation.play(getNoteType());
 		}
-
-		if (this.noteType == "danger")
-			this.x -= 320;
 	}
 
 	override public function update(elapsed:Float)
 	{
 		if (!inCharter)
+		{
 			canBeHit = (strumTime <= Conductor.songPosition + (Conductor.safeFrames * 10)
 				&& strumTime >= Conductor.songPosition - (Conductor.safeFrames * 10));
-
-		// active = (Conductor.songPosition - strumTime < 1000 && !mustPress && !isSus);
+		}
 
 		super.update(elapsed);
 	}

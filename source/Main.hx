@@ -13,9 +13,11 @@ import openfl.display.Sprite;
 
 class Main extends Sprite
 {
-	static public var fps = 120;
+	static public var fps = 60;
 
 	public static var fpsText:FPS = new FPS(10, 10, FlxColor.WHITE);
+
+	var daDebug:Bool = false; // manually change this variable for PRECISE_DEBUG;
 
 	// var fpsInfo:FpsText = new FpsText(10, 10);
 
@@ -23,8 +25,26 @@ class Main extends Sprite
 	{
 		Data.initSave();
 		FlxG.fixedTimestep = false;
+
+		#if debug
+		Main.initDebugCommand();
+		#end
+
 		trace(FlxG.renderBlit);
 		trace(FlxG.renderMethod);
+	}
+
+	public static function initDebugCommand()
+	{
+		FlxG.console.registerFunction("reset_G", function()
+		{
+			FlxG.resetGame();
+		});
+
+		FlxG.console.registerFunction("reset_S", function()
+		{
+			FlxG.resetState();
+		});
 	}
 
 	public function new()

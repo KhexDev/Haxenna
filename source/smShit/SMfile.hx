@@ -65,6 +65,7 @@ class SMFile
 
 			var checkData = headerData.split(";");
 
+			// this is kinda bad but whatever
 			for (i in checkData)
 			{
 				var value = i.split(":")[0];
@@ -77,6 +78,20 @@ class SMFile
 					trace(daValue);
 					bpm = Std.parseFloat(daBpm);
 					trace(bpm);
+
+					var bpms = daValue.split(",");
+
+					trace(bpms);
+
+					for (i in 0...bpms.length)
+					{
+						var beat = Std.parseFloat(bpms[i].split("=")[0]);
+						var newBpm = Std.parseFloat(bpms[i].split("=")[1]);
+
+						bpmList.push([beat, newBpm]);
+					}
+					bpmList.shift();
+					trace(bpmList);
 				}
 
 				if (value == "#OFFSET")
@@ -151,7 +166,7 @@ class SMFile
 				{
 					measures.push(new SMMeasure(measure.split('\n')));
 					// trace(measures);
-					trace(measures.length);
+					// trace(measures.length);
 					measure = "";
 					continue;
 				}
@@ -219,12 +234,28 @@ class SMFile
 		// adding all timing possible i guess ?
 		crochet = (bpm / 60) * 1000;
 
-		for (i in 0...100)
+		for (i in 0...150)
 		{
 			var startBeat = crochet * i;
 			var endBeat = crochet * (i + 1);
+			var startStep = (crochet / 16) / 0.25;
+			var endStep = (crochet * 0.25) * (i + 1);
 
-			// trace("startBeat : " + crochet * i + " endBeat : " + crochet * (i + 1));
+			trace("startBeat : " + crochet * i + " endBeat : " + crochet * (i + 1));
+			trace("startStep : " + startStep + " endStep : " + endStep);
+
+			for (i in 0...bpmList.length)
+			{
+				if (startStep >= bpmList[i][0])
+				{
+					trace("changing bpm" + bpm + " -> " + bpmList[i][0]);
+					bpm = bpmList[i][1];
+					bpmList.shift();
+					break;
+				}
+			}
+
+			trace(bpm);
 
 			TimingStruct.addTiming(startBeat, bpm, endBeat, 0);
 

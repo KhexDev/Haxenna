@@ -37,7 +37,7 @@ class TimingStruct
 		return beat;
 	}
 
-	public static function getTimeFromBeat(beat:Float)
+	public static function getTimeFromBeat(beat)
 	{
 		var time = -1.0;
 		var seg = TimingStruct.getTimingAtBeat(beat);

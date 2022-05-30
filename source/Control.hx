@@ -22,7 +22,7 @@ class Control
 	public var UP_R = new FlxActionDigital();
 	public var RIGHT_R = new FlxActionDigital();
 
-	public function new()
+	public function new(player:Int = 1)
 	{
 		var keyHold:Array<FlxActionDigital> = [LEFT, DOWN, UP, RIGHT];
 		var keyPresses:Array<FlxActionDigital> = [LEFT_P, DOWN_P, UP_P, RIGHT_P];
@@ -30,10 +30,20 @@ class Control
 
 		for (i in 0...4)
 		{
-			var converted = FlxKey.fromStringMap.get(Option.controls[i]);
-			keyHold[i].addKey(converted, PRESSED);
-			keyPresses[i].addKey(converted, JUST_PRESSED);
-			keyReleased[i].addKey(converted, JUST_RELEASED);
+			if (player == 2)
+			{
+				var converted = FlxKey.fromStringMap.get(Option.controls2[i]);
+				keyHold[i].addKey(converted, PRESSED);
+				keyPresses[i].addKey(converted, JUST_PRESSED);
+				keyReleased[i].addKey(converted, JUST_RELEASED);
+			}
+			else
+			{
+				var converted = FlxKey.fromStringMap.get(Option.controls[i]);
+				keyHold[i].addKey(converted, PRESSED);
+				keyPresses[i].addKey(converted, JUST_PRESSED);
+				keyReleased[i].addKey(converted, JUST_RELEASED);
+			}
 		}
 
 		// LEFT.addKey(FlxKey.D, JUST_PRESSED);
